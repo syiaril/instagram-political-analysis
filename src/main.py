@@ -22,13 +22,21 @@ def main():
         print(f"Loading REAL data from {raw_excel_path}...")
         df = pd.read_excel(raw_excel_path)
         
-        # Auto-map column names (since scrapers use different names like 'Username', 'Comment')
-        col_lower = {c: str(c).lower() for c in df.columns}
-        for col, lower in col_lower.items():
-            if 'user' in lower:
-                df.rename(columns={col: 'username'}, inplace=True)
-            elif 'text' in lower or 'comment' in lower or 'komentar' in lower:
-                df.rename(columns={col: 'comment_text'}, inplace=True)
+        # Safely map columns to avoid duplicates (e.g. comment_id and comment_text both matching 'comment')
+        text_col = next((c for c in df.columns if str(c).lower() in ['text', 'comment', 'komentar', 'comment_text']), None)
+        if not text_col:
+            text_col = next((c for c in df.columns if 'text' in str(c).lower() or 'comment' in str(c).lower()), None)
+        if text_col:
+            df.rename(columns={text_col: 'comment_text'}, inplace=True)
+            
+        user_col = next((c for c in df.columns if str(c).lower() in ['username', 'user', 'owner', 'author']), None)
+        if not user_col:
+            user_col = next((c for c in df.columns if 'user' in str(c).lower() or 'owner' in str(c).lower()), None)
+        if user_col:
+            df.rename(columns={user_col: 'username'}, inplace=True)
+            
+        # Drop duplicates in index or columns if any somehow survived
+        df = df.loc[:, ~df.columns.duplicated()]
                 
         # Fill missing classification columns with NaN so they exist
         if 'account_private' not in df.columns:
