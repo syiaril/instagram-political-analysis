@@ -1,19 +1,56 @@
-# TODO: Later replace with a real model pipeline loading from HuggingFace
-MODEL_NAME = "mock-indonesian-sentiment"
+import os
+import json
+from pydantic import BaseModel, Field
+from google import genai
+from google.genai import types
+
+# Optional: Set your GEMINI_API_KEY as an environment variable in Colab
+# os.environ["GEMINI_API_KEY"] = "YOUR_API_KEY"
+
+# Ensure the client is initialized (it will automatically look for GEMINI_API_KEY in the environment)
+try:
+    client = genai.Client()
+except Exception as e:
+    client = None
+
+# Define the structured output format
+class SentimentResult(BaseModel):
+    sentiment: str = Field(description="The sentiment of the comment: 'negative', 'neutral', or 'positive'")
+    confidence: float = Field(description="Confidence score between 0.0 and 1.0")
 
 def predict(text: str) -> dict:
     """
-    Mock sentiment prediction.
-    In real implementation, this will use the Transformers model.
+    Real sentiment prediction using Gemini API.
     """
-    # Simple mock logic for demonstration
-    text_lower = text.lower()
+    if not client:
+        # Fallback if API Key is not set
+        return {"sentiment": "neutral", "confidence": 0.0}
+
+    prompt = f"""
+    Tugas Anda adalah melakukan analisis sentimen politik pada komentar Instagram masyarakat Indonesia berikut.
+    Banyak komentar yang menggunakan bahasa slang, sarkasme, atau singkatan. 
+    Klasifikasikan sentimennya terhadap pemerintah/kebijakan menjadi: 'negative', 'neutral', atau 'positive'.
     
-    if "buruk" in text_lower or "ecewa" in text_lower or "gagal" in text_lower or "becus" in text_lower:
-        return {"sentiment": "negative", "confidence": 0.94}
+    Komentar: "{text}"
+    """
+    
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=SentimentResult,
+                temperature=0.1,
+            ),
+        )
         
-    if "hebat" in text_lower or "bagus" in text_lower:
-        # Could be positive or sarcasm, mock as positive for now
-        return {"sentiment": "positive", "confidence": 0.85}
-        
-    return {"sentiment": "neutral", "confidence": 0.70}
+        # Parse the JSON response
+        result = json.loads(response.text)
+        return {
+            "sentiment": result.get("sentiment", "neutral").lower(),
+            "confidence": result.get("confidence", 0.0)
+        }
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        return {"sentiment": "neutral", "confidence": 0.0}
