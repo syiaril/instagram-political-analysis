@@ -31,22 +31,27 @@ def predict(text: str) -> dict:
     Banyak komentar yang menggunakan bahasa slang, sarkasme, atau singkatan. 
     Klasifikasikan sentimennya terhadap pemerintah/kebijakan menjadi: 'negative', 'neutral', atau 'positive'.
     
+    Berikan output dalam format JSON strict (tanpa blok markdown) dengan keys:
+    - "sentiment": ("negative", "neutral", "positive")
+    - "confidence": (float antara 0.0 sampai 1.0)
+    
     Komentar: "{text}"
     """
     
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=SentimentResult,
-                temperature=0.1,
-            ),
+        interaction = client.interactions.create(
+            model='gemini-3.7-flash',
+            input=prompt,
         )
         
-        # Parse the JSON response
-        result = json.loads(response.text)
+        # Clean markdown codeblocks if model returns it
+        out_text = interaction.output_text.strip()
+        if out_text.startswith("```json"):
+            out_text = out_text[7:]
+        if out_text.endswith("```"):
+            out_text = out_text[:-3]
+            
+        result = json.loads(out_text.strip())
         return {
             "sentiment": result.get("sentiment", "neutral").lower(),
             "confidence": result.get("confidence", 0.0)
