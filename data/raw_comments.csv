@@ -1,0 +1,9 @@
+username,comment_text,account_private,follows_anies
+user01,"Pemerintah sekarang benar-benar mengecewakan.",false,true
+user02,"Saya kecewa dengan kebijakan pemerintah ini.",false,false
+user03,"Semoga pemerintah bisa bekerja lebih baik.",true,
+user04,"Semua keputusan pemerintah tidak masuk akal.",false,true
+user05,"Menurut saya kebijakan ini perlu diperbaiki.",false,false
+user06,"Pemerintah harus lebih mendengarkan masyarakat.",false,false
+user07,"Saya sangat tidak setuju dengan kebijakan tersebut.",true,
+user08,"Kebijakan pemerintah ini buruk sekali.",false,true
