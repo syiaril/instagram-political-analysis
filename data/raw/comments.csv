@@ -1,0 +1,7 @@
+post_id,post_url,comment_id,username,comment_text,timestamp,account_private,follows_anies
+1,https://instagram.com/p/1,101,user_a,Pemerintah sekarang sangat mengecewakan,2026-09-24T10:00:00Z,false,true
+1,https://instagram.com/p/1,102,user_b,Saya tidak setuju dengan kebijakan ini,2026-09-24T10:05:00Z,true,
+1,https://instagram.com/p/1,103,user_c,Semoga pemerintah bisa bekerja lebih baik,2026-09-24T10:10:00Z,false,false
+2,https://instagram.com/p/2,104,user_d,Wah hebat sekali pemerintah kita 😂,2026-09-24T11:00:00Z,false,true
+2,https://instagram.com/p/2,105,user_e,yg beginian aja gk becus,2026-09-24T11:15:00Z,true,
+2,https://instagram.com/p/2,106,user_f,fix gagal total,2026-09-24T11:20:00Z,false,false

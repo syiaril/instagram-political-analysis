@@ -1,89 +1,51 @@
 import pandas as pd
+import json
+import os
 
-from sentiment import create_sentiment_analyzer, analyze_sentiment
-from classifier import classify_account
-
-
-INPUT_FILE = "data/raw_comments.csv"
-OUTPUT_FILE = "data/processed_comments.csv"
-
+from src.preprocessing.cleaner import clean_text
+from src.sentiment.analyzer import predict
+from src.classification.account_classifier import classify_account
+from src.analysis.statistics import calculate_statistics
 
 def main():
-    print("Membaca data...")
+    print("Starting pipeline...")
+    raw_data_path = os.path.join("data", "raw", "comments.csv")
+    processed_data_path = os.path.join("data", "processed", "comments_processed.csv")
+    
+    if not os.path.exists(raw_data_path):
+        print(f"Error: Raw data file {raw_data_path} not found.")
+        return
 
-    df = pd.read_csv(INPUT_FILE)
-
-    print(f"Total komentar: {len(df)}")
-
-    print("\nMemuat model sentiment analysis...")
-    analyzer = create_sentiment_analyzer()
-
-    sentiments = []
-
-    print("\nMenganalisis komentar...")
-
-    for _, row in df.iterrows():
-        label, score = analyze_sentiment(
-            analyzer,
-            row["comment_text"]
-        )
-
-        sentiments.append({
-            "sentiment": label,
-            "sentiment_score": score
-        })
-
-    sentiment_df = pd.DataFrame(sentiments)
-
-    df = pd.concat(
-        [df.reset_index(drop=True), sentiment_df],
-        axis=1
-    )
-
-    # Hanya komentar negatif
-    negative_df = df[
-        df["sentiment"].str.lower() == "negative"
-    ].copy()
-
-    print(f"\nKomentar negatif: {len(negative_df)}")
-
-    # Klasifikasi akun
-    negative_df["classification"] = negative_df.apply(
-        lambda row: classify_account(
-            row["account_private"],
-            row["follows_anies"]
-        ),
-        axis=1
-    )
-
-    # Hitung jumlah
-    counts = negative_df["classification"].value_counts()
-
-    total = len(negative_df)
-
-    print("\n=== HASIL ANALISIS ===")
-
-    for category in ["anies", "neutral", "private"]:
-        count = counts.get(category, 0)
-
-        percentage = (
-            count / total * 100
-            if total > 0
-            else 0
-        )
-
-        print(
-            f"{category.upper():8} : "
-            f"{count:4} akun "
-            f"({percentage:.2f}%)"
-        )
-
-    negative_df.to_csv(
-        OUTPUT_FILE,
-        index=False
-    )
-
-    print(f"\nData disimpan ke: {OUTPUT_FILE}")
+    # Load raw data
+    print(f"Loading data from {raw_data_path}...")
+    df = pd.read_csv(raw_data_path)
+    
+    # Preprocessing
+    print("Cleaning text...")
+    df['cleaned_text'] = df['comment_text'].apply(lambda x: clean_text(x))
+    
+    # Sentiment Analysis
+    print("Analyzing sentiment...")
+    sentiments = df['cleaned_text'].apply(lambda x: predict(x))
+    df['sentiment'] = [res['sentiment'] for res in sentiments]
+    df['sentiment_score'] = [res['confidence'] for res in sentiments]
+    
+    # Account Classification
+    print("Classifying accounts...")
+    classifications = df.apply(lambda row: classify_account(row['account_private'], row['follows_anies']), axis=1)
+    df['classification'] = [res[0] for res in classifications]
+    df['classification_reason'] = [res[1] for res in classifications]
+    
+    # Save processed data
+    print(f"Saving processed data to {processed_data_path}...")
+    df.to_csv(processed_data_path, index=False)
+    
+    # Aggregation & Statistics
+    print("Calculating statistics...")
+    stats = calculate_statistics(df)
+    
+    print("\n--- Pipeline Completed ---")
+    print(json.dumps(stats, indent=4))
 
 
 if __name__ == "__main__":
