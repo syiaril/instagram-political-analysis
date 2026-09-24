@@ -36,6 +36,11 @@ def main():
     df['classification'] = [res[0] for res in classifications]
     df['classification_reason'] = [res[1] for res in classifications]
     
+    print("\n--- DEBUG INFO ---")
+    for idx, row in df.iterrows():
+        print(f"Row {idx}: {row['username']} | text: {row['cleaned_text']} | sentiment: {row['sentiment']} | follows: {row['follows_anies']} -> class: {row['classification']}")
+    print("------------------\n")
+    
     # Save processed data
     print(f"Saving processed data to {processed_data_path}...")
     df.to_csv(processed_data_path, index=False)
