@@ -9,7 +9,7 @@ def predict(text: str) -> dict:
     # Simple mock logic for demonstration
     text_lower = text.lower()
     
-    if "buruk" in text_lower or "kecewa" in text_lower or "gagal" in text_lower or "becus" in text_lower:
+    if "buruk" in text_lower or "ecewa" in text_lower or "gagal" in text_lower or "becus" in text_lower:
         return {"sentiment": "negative", "confidence": 0.94}
         
     if "hebat" in text_lower or "bagus" in text_lower:

@@ -12,6 +12,10 @@ def main():
     raw_data_path = os.path.join("data", "raw", "comments.csv")
     processed_data_path = os.path.join("data", "processed", "comments_processed.csv")
     
+    # Create directories if they don't exist (because Git ignores empty folders)
+    os.makedirs(os.path.dirname(raw_data_path), exist_ok=True)
+    os.makedirs(os.path.dirname(processed_data_path), exist_ok=True)
+    
     if not os.path.exists(raw_data_path):
         print(f"Error: Raw data file {raw_data_path} not found.")
         return
